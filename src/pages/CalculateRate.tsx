@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -62,11 +61,17 @@ const formSchema = z.object({
   adjustments: z.array(z.string()).default([]),
 });
 
+// Define a type for a step in the plan rules
+interface PlanRuleStep {
+  type: string;
+  value: string;
+}
+
 interface PlanRule {
   id: string;
   plan_id: string;
   base_source: string;
-  steps: Json; // Changed from any[] to Json to match Supabase type
+  steps: Json; // Json type from Supabase
 }
 
 interface CategoryRule {
@@ -317,14 +322,23 @@ const CalculateRate = () => {
 
         // Appliquer les règles du plan (étapes)
         if (planRules && planRules.steps) {
-          const steps = Array.isArray(planRules.steps) ? planRules.steps : [];
-          for (const step of steps) {
-            if (step.type === 'multiplier') {
-              calculatedRate = calculatedRate * parseFloat(step.value);
-            } else if (step.type === 'add_offset') {
-              calculatedRate = calculatedRate + parseFloat(step.value);
-            } else if (step.type === 'subtract_offset') {
-              calculatedRate = calculatedRate - parseFloat(step.value);
+          // Convert Json to array safely
+          const stepsArray = Array.isArray(planRules.steps) 
+            ? planRules.steps 
+            : typeof planRules.steps === 'string' 
+              ? JSON.parse(planRules.steps) 
+              : [];
+
+          // Process each step
+          for (const step of stepsArray) {
+            if (step && typeof step === 'object') {
+              if (step.type === 'multiplier' && step.value) {
+                calculatedRate = calculatedRate * parseFloat(step.value);
+              } else if (step.type === 'add_offset' && step.value) {
+                calculatedRate = calculatedRate + parseFloat(step.value);
+              } else if (step.type === 'subtract_offset' && step.value) {
+                calculatedRate = calculatedRate - parseFloat(step.value);
+              }
             }
           }
         }
