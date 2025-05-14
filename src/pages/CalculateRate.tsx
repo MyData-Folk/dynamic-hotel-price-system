@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useAppData } from '@/contexts/AppDataContext';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 // Schéma de validation du formulaire
 const formSchema = z.object({
@@ -65,7 +66,7 @@ interface PlanRule {
   id: string;
   plan_id: string;
   base_source: string;
-  steps: any[];
+  steps: Json; // Changed from any[] to Json to match Supabase type
 }
 
 interface CategoryRule {
