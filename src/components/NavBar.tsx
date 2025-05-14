@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
+import UserMenu from './UserMenu';
 
 const NavBar = () => {
   const location = useLocation();
@@ -36,6 +37,10 @@ const NavBar = () => {
               {item.name}
             </Link>
           ))}
+        </div>
+        
+        <div className="mt-4 sm:mt-0">
+          <UserMenu />
         </div>
       </div>
     </nav>
