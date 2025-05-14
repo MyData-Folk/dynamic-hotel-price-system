@@ -18,7 +18,7 @@ const UserMenu = () => {
   
   if (!user) {
     return (
-      <Button variant="outline" size="sm" asChild>
+      <Button variant="secondary" size="sm" asChild>
         <Link to="/auth">
           <User className="mr-2 h-4 w-4" />
           Se connecter

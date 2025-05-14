@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -483,6 +482,27 @@ const VerifyBooking = () => {
                     <TableCell className="text-right">{result.finalRate.toFixed(2)} €</TableCell>
                   </TableRow>
                 </TableFooter>
+              </Table>
+
+              {/* Détails quotidiens */}
+              <h3 className="font-medium text-base mt-6 mb-2">Détail par jour</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Tarif de base</TableHead>
+                    <TableHead className="text-right">Tarif ajusté</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {result.dailyBreakdown.map((day, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{format(day.date, 'dd/MM/yyyy')}</TableCell>
+                      <TableCell className="text-right">{day.baseRate.toFixed(2)} €</TableCell>
+                      <TableCell className="text-right">{day.adjustedRate.toFixed(2)} €</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
               </Table>
             </Card>
           )}
