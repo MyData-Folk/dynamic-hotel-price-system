@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { formatDateYYYYMMDD } from '@/lib/utils'; // Now properly imported
+import { formatDateYYYYMMDD } from '@/lib/utils';
 
 
 // ==========================================================================
@@ -26,9 +27,9 @@ type PartnerAdjustment = { id: string; partner_id: string; description: string; 
 
 interface AppDataContextType {
   // Données brutes (stockées dans l'état) - Potentiellement moins utilisées directement
-  partners: Partner[];  // Added missing property
-  plans: Plan[];  // Added missing property
-  categories: Category[];  // Added missing property
+  partners: Partner[];
+  plans: Plan[];
+  categories: Category[];
   // partnerPlans: PartnerPlan[];
   // dailyBaseRates: DailyBaseRate[]; // Exemple si tu veux stocker les brutes aussi
   // categoryRules: CategoryRule[];
@@ -404,6 +405,10 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
            throw new Error("Une ou plusieurs tables essentielles ont retourné des données nulles.");
        }
 
+      // Update state for raw data
+      setCategories(fetchedData.categories);
+      setPlans(fetchedData.plans);
+      setPartners(fetchedData.partners);
 
       // Traiter les données pour peupler l'état du contexte (Maps/Sets)
       const { newState, missingPlanWarningsCount } = processFetchedData(fetchedData);
@@ -461,6 +466,11 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Expose les données TRATÉES et l'état de chargement/erreur
 
   const contextValue: AppDataContextType = {
+    // Include the raw data state variables
+    partners,
+    plans,
+    categories,
+    
     // Expose les Sets et Maps traités
     allCategories: appDataState.allCategories,
     allPlans: appDataState.allPlans,
@@ -596,3 +606,4 @@ export const useAppData = (): AppDataContextType => {
 // const { allCategories, getPlanIdByCode } = useAppData();
 // console.log(allCategories);
 // const planId = getPlanIdByCode('OTA-RO-FLEX');
+
