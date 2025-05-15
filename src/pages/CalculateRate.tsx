@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppData } from '@/contexts/AppDataContext';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { FormValues, CalculationResult } from "@/types/calculateRate.types";
 import { useRules } from "@/hooks/useRules";
 import { calculateRate } from "@/utils/rateCalculator";
@@ -35,6 +36,26 @@ const CalculateRate = () => {
   // Handle form submission
   const handleSubmit = async (values: FormValues) => {
     try {
+      // Vérifier si les règles nécessaires sont chargées
+      if (!planRules) {
+        toast({
+          title: "Erreur",
+          description: "Les règles du plan n'ont pas été chargées. Veuillez sélectionner un plan.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!categoryRules) {
+        toast({
+          title: "Erreur",
+          description: "Les règles de catégorie n'ont pas été chargées. Veuillez sélectionner une catégorie.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Calculer le tarif
       const result = await calculateRate({
         values,
         planRules,
@@ -76,17 +97,12 @@ const CalculateRate = () => {
     }
   };
 
-  // Watch for plan and category changes
+  // Pass handlers to the form component
   useEffect(() => {
-    const subscription = () => {
-      // This is a placeholder for the subscription setup
-      // It will be called when the component mounts
-      return () => {
-        // Cleanup function
-      };
+    // This function will be called when the component mounts
+    return () => {
+      // Cleanup function when component unmounts
     };
-
-    return subscription();
   }, []);
 
   return (
@@ -117,6 +133,8 @@ const CalculateRate = () => {
               setAvailableCategories={setAvailableCategories}
               setPartnerAdjustments={setPartnerAdjustments}
               onSubmit={handleSubmit}
+              onPlanChange={handlePlanChange}
+              onCategoryChange={handleCategoryChange}
             />
           </Card>
         </div>

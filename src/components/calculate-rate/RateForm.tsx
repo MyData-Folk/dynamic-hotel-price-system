@@ -50,6 +50,8 @@ interface RateFormProps {
   setAvailableCategories: React.Dispatch<React.SetStateAction<any[]>>;
   setPartnerAdjustments: React.Dispatch<React.SetStateAction<any[]>>;
   onSubmit: (values: FormValues) => Promise<void>;
+  onPlanChange?: (planId: string) => void;
+  onCategoryChange?: (categoryId: string) => void;
 }
 
 export const RateForm: React.FC<RateFormProps> = ({
@@ -66,7 +68,9 @@ export const RateForm: React.FC<RateFormProps> = ({
   setAvailablePlans,
   setAvailableCategories,
   setPartnerAdjustments,
-  onSubmit
+  onSubmit,
+  onPlanChange,
+  onCategoryChange
 }) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -116,10 +120,24 @@ export const RateForm: React.FC<RateFormProps> = ({
         const adjustments = getPartnerAdjustments(watchPartnerId, watchPlanId);
         setPartnerAdjustments(adjustments);
       }
+
+      // Appeler la fonction onPlanChange pour charger les règles du plan
+      if (onPlanChange) {
+        onPlanChange(watchPlanId);
+      }
     } else {
       setAvailableCategories([]);
     }
-  }, [watchPlanId, categories, getPlanCategories, form, watchPartnerId, getPartnerAdjustments, setAvailableCategories, setPartnerAdjustments]);
+  }, [watchPlanId, categories, getPlanCategories, form, watchPartnerId, getPartnerAdjustments, setAvailableCategories, setPartnerAdjustments, onPlanChange]);
+
+  // Observer les changements de catégorie pour charger les règles correspondantes
+  const watchCategoryId = form.watch("categoryId");
+  
+  useEffect(() => {
+    if (watchCategoryId && onCategoryChange) {
+      onCategoryChange(watchCategoryId);
+    }
+  }, [watchCategoryId, onCategoryChange]);
 
   return (
     <CardContent>

@@ -1,8 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { PlanRule, CategoryRule } from "@/types/calculateRate.types";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export function useRules() {
   const [planRules, setPlanRules] = useState<PlanRule | null>(null);
@@ -69,24 +70,40 @@ export function useRules() {
     }
   };
 
-  // Fetch daily base rate
+  // Fetch daily base rate from the daily_base_rates table
   const fetchDailyBaseRate = async (date: Date, baseSource: string) => {
     try {
+      // Format the date to YYYY-MM-DD for database query
       const formattedDate = date.toISOString().split('T')[0];
+      
+      console.log(`Recherche du tarif pour la date ${formattedDate}, source: ${baseSource}`);
+      
       const { data, error } = await supabase
         .from('daily_base_rates')
         .select('*')
         .eq('date', formattedDate)
-        .maybeSingle(); // Using maybeSingle instead of single
+        .maybeSingle();
 
       if (error || !data) {
         console.error(`Pas de tarif disponible pour la date ${formattedDate}:`, error);
-        return 0;
+        toast({
+          title: "Avertissement",
+          description: `Aucun tarif trouvé pour le ${format(date, 'dd/MM/yyyy', {locale: fr})}`,
+          variant: "destructive",
+        });
+        return 0; // Return 0 if no rate is found
       }
 
+      // Return the appropriate rate based on baseSource (either 'ota_rate' or 'travco_rate')
+      console.log(`Tarif trouvé: ${baseSource === 'ota_rate' ? data.ota_rate : data.travco_rate}`);
       return baseSource === 'ota_rate' ? data.ota_rate : data.travco_rate;
     } catch (error) {
       console.error("Erreur lors de la récupération du tarif de base:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer le tarif de base",
+        variant: "destructive",
+      });
       return 0;
     }
   };
