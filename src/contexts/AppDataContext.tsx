@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { formatDateYYYYMMDD } from '@/lib/utils'; // Assumes you have utils.js in lib or components
+import { useToast } from "@/hooks/use-toast";
+import { formatDateYYYYMMDD } from '@/lib/utils'; // Now properly imported
 
 
 // ==========================================================================
@@ -26,9 +26,9 @@ type PartnerAdjustment = { id: string; partner_id: string; description: string; 
 
 interface AppDataContextType {
   // Données brutes (stockées dans l'état) - Potentiellement moins utilisées directement
-  // categories: Category[];
-  // plans: Plan[];
-  // partners: Partner[];
+  partners: Partner[];  // Added missing property
+  plans: Plan[];  // Added missing property
+  categories: Category[];  // Added missing property
   // partnerPlans: PartnerPlan[];
   // dailyBaseRates: DailyBaseRate[]; // Exemple si tu veux stocker les brutes aussi
   // categoryRules: CategoryRule[];
@@ -41,8 +41,8 @@ interface AppDataContextType {
   allPartners: Set<string>; // Noms de partenaires pour dropdowns
 
   partnerToPlansMap: Map<string, Set<string>>; // Map PartnerName -> Set<PlanCode> (pour filtrage UI)
-  planToCategoriesMap: Map<string, Set<string>>; // Map PlanCode -> Set<CategoryName> (temporaire pour filtrage UI)
-  categoryToPlansMap: Map<string, Set<string>>; // Map CategoryName -> Set<PlanCode> (temporaire pour filtrage UI)
+  planToCategoriesMap: Map<string, Set<string>>; // Map PlanCode -> Set<CategoryName> (pour filtrage UI)
+  categoryToPlansMap: Map<string, Set<string>>; // Map CategoryName -> Set<PlanCode> (pour filtrage UI)
 
   baseRatesByDate: Map<string, number>; // Map Date (YYYY-MM-DD) -> OTA Rate
   travcoBaseRatesByDate: Map<string, number>; // Map Date (YYYY-MM-DD) -> Travco Rate
@@ -65,14 +65,10 @@ interface AppDataContextType {
   error: Error | null; // Stocke l'erreur si le chargement échoue
   dataLoaded: boolean; // Flag indiquant si le chargement initial est terminé et réussi
 
-  // Fonctions Getters (optionnel si les Maps sont exposées directement, mais peut être plus propre)
-  // getPartnerPlans: (partnerId: string) => string[]; // Expose getPartnerToPlansMap instead
-  // getPlanCategories: (planId: string) => string[]; // Expose planToCategoriesMap instead
-  // getPartnerAdjustments: (partnerId: string) => PartnerAdjustment[]; // Expose partnerAdjustmentsMap instead
-  // getCategoryRule: (categoryId: string) => CategoryRule | undefined; // Expose categoryRulesMap instead
-  // getPlanRule: (planId: string) => PlanRule | undefined; // Expose planRulesMap instead
-  // getPartnerIdByName: (name: string) => string | undefined; // Expose partnerNameToId instead
-  // ... etc pour tous les mappings et règles
+  // Add missing functions to the type
+  getPartnerPlans: (partnerId: string) => string[];
+  getPlanCategories: (planId: string) => string[];
+  getPartnerAdjustments: (partnerId: string, planId?: string) => PartnerAdjustment[];
 }
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
@@ -99,6 +95,11 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
     partnerNameToId: new Map(), categoryNameToId: new Map(), planCodeToId: new Map(),
     partnerIdToName: new Map(), categoryIdToName: new Map(), planIdToCode: new Map(),
   });
+  
+  // Add missing state variables for raw data
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -412,19 +413,19 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       // Afficher des avertissements UI basés sur le traitement si nécessaire
       if (newState.baseRatesByDate.size === 0 && newState.travcoBaseRatesByDate.size === 0) {
-          toast({ title: "Avertissement", description: "Aucun tarif de base valide trouvé. Le calcul sera limité.", variant: "warning" });
+          toast({ title: "Avertissement", description: "Aucun tarif de base valide trouvé. Le calcul sera limité.", variant: "default" });
       }
       if (newState.categoryRulesMap.size === 0) {
-          toast({ title: "Avertissement", description: "Aucune règle de catégorie trouvée. Les calculs par catégorie pourraient être incorrects.", variant: "warning" });
+          toast({ title: "Avertissement", description: "Aucune règle de catégorie trouvée. Les calculs par catégorie pourraient être incorrects.", variant: "default" });
       }
       if (newState.planRulesMap.size === 0) {
-           toast({ title: "Avertissement", description: "Aucune règle de plan trouvée. Les calculs de plans pourraient être incorrects.", variant: "warning" });
+           toast({ title: "Avertissement", description: "Aucune règle de plan trouvée. Les calculs de plans pourraient être incorrects.", variant: "default" });
       }
       if ([...newState.partnerAdjustmentsMap.values()].flat().length === 0) {
-           toast({ title: "Avertissement", description: "Aucun ajustement partenaire valide trouvé.", variant: "warning" });
+           toast({ title: "Avertissement", description: "Aucun ajustement partenaire valide trouvé.", variant: "default" });
       }
       if (missingPlanWarningsCount > 0) {
-           toast({ title: "Avertissement", description: `${missingPlanWarningsCount} liens Partenaire/Plan invalides ignorés.`, variant: "warning" });
+           toast({ title: "Avertissement", description: `${missingPlanWarningsCount} liens Partenaire/Plan invalides ignorés.`, variant: "default" });
       }
 
 
@@ -544,12 +545,9 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
              });
        }
 
-
        return [...adjustments]; // Retourne une copie du tableau de tous les ajustements pour ce partenaire (sans filtrage plan)
     },
-
   };
-
 
   // ==========================================================================
   // ==                            EFFECT HOOK POUR LE CHARGEMENT            ==

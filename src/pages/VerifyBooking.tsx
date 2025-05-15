@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -65,7 +66,16 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const VerifyBooking = () => {
-  const { partners, plans, categories, getPartnerPlans, getPlanCategories, getPartnerAdjustments, loading } = useAppData();
+  const { 
+    partners = [], 
+    plans = [], 
+    categories = [], 
+    getPartnerPlans, 
+    getPlanCategories, 
+    getPartnerAdjustments, 
+    loading 
+  } = useAppData();
+  
   const [result, setResult] = useState<RateCalculationResult | null>(null);
   const [selectedAdjustments, setSelectedAdjustments] = useState<string[]>([]);
   const [variance, setVariance] = useState<{ amount: number; status: 'ok' | 'discrepancy' } | null>(null);
